@@ -232,13 +232,18 @@ export function drawPoster(a,b,experiment){
 }
 
 export function drawScorePoster(specimen,result){
-  const canvas=drawPoster(specimen,null,null),c=canvas.getContext('2d');
-  c.fillStyle='#eaf0f1';c.fillRect(0,190,1400,110);c.fillRect(0,1150,1400,360);
-  c.fillStyle='#506c77';c.font='25px "Microsoft YaHei",sans-serif';c.fillText(`推友斗菌场 / 20 秒真实战绩 / @${specimen.name}`,75,249,1250);
-  c.fillStyle='#183a46';c.font='bold 140px Arial';c.fillText(`${result.score}`,75,1305);c.font='32px "Microsoft YaHei",sans-serif';c.fillText('分',520,1300);
-  c.font='bold 51px "Microsoft YaHei",sans-serif';c.fillText(scoreTitle(result.score),75,1390);
-  c.fillStyle='#506c77';c.font='29px "Microsoft YaHei",sans-serif';c.fillText(`抢到 ${result.collected} 颗营养泡泡，碰撞 ${result.hits} 次。`,75,1450);
-  c.fillStyle='#183a46';c.font='26px "Microsoft YaHei",sans-serif';c.fillText('你能赢过我的残影吗？',780,1360);
-  c.fillStyle='#506c77';c.font='21px "Microsoft YaHei",sans-serif';c.fillText('打开挑战链接，同一场地见。',780,1410);
+  const canvas=document.createElement('canvas');canvas.width=1400;canvas.height=1700;const c=canvas.getContext('2d');if(!c)throw new Error('当前浏览器不能生成战绩图');
+  const bg=c.createRadialGradient(700,660,0,700,660,740);bg.addColorStop(0,'#f7ffff');bg.addColorStop(.62,'#d9ecee');bg.addColorStop(1,'#eaf0f1');c.fillStyle=bg;c.fillRect(0,0,1400,1700);
+  c.textAlign='left';c.fillStyle='#183a46';c.font='bold 31px "Microsoft YaHei",sans-serif';c.fillText('推友斗菌场',75,104);c.font='17px Arial';c.fillText('AMZ / 20 SECONDS. ONE PETRI DISH.',75,145);
+  c.textAlign='right';c.font='23px Arial';c.fillText('@AmzTjh34230',1325,112);c.textAlign='left';
+  c.fillStyle='#506c77';c.font='25px "Microsoft YaHei",sans-serif';c.fillText(`20 秒真实战绩 / @${specimen.name}`,75,245,1250);
+  drawCreature(c,specimen,700,630,245,1.8,{blink:1,gaze:{x:.1,y:0}});
+  c.textAlign='left';c.fillStyle='#183a46';c.font='bold 140px Arial';c.fillText(`${result.score}`,75,1270);c.font='32px "Microsoft YaHei",sans-serif';c.fillText('分',475,1265);
+  c.font='bold 51px "Microsoft YaHei",sans-serif';c.fillText(scoreTitle(result.score),75,1350);
+  const stats=Number.isFinite(result.collected)&&Number.isFinite(result.hits)?`抢到 ${result.collected} 颗营养泡泡，碰撞 ${result.hits} 次。`:'二十秒操作已记录，真实残影已就位。';
+  c.fillStyle='#506c77';c.font='27px "Microsoft YaHei",sans-serif';c.fillText(stats,75,1410);
+  c.fillStyle='#183a46';c.font='31px "Microsoft YaHei",sans-serif';c.fillText('你能赢过我的残影吗？',790,1280);c.fillStyle='#506c77';c.font='23px "Microsoft YaHei",sans-serif';c.fillText('打开挑战链接，同一场地见。',790,1340);
+  c.strokeStyle='#bed0d5';c.lineWidth=1;c.beginPath();c.moveTo(75,1510);c.lineTo(1325,1510);c.stroke();c.fillStyle='#183a46';c.font='26px "Microsoft YaHei",sans-serif';c.fillText('20 秒，来赢我。',75,1575);
+  c.textAlign='right';c.font='22px Arial';c.fillText('yns34-hub.github.io/petri',1325,1575);c.textAlign='left';c.fillStyle='#506c77';c.font='17px "Microsoft YaHei",sans-serif';c.fillText('真实操作残影 / 趣味挑战 / 你的浏览器就是竞技场',75,1640);c.textAlign='right';c.font='16px Arial';c.fillText(specimen.code,1325,1640);
   return canvas;
 }
