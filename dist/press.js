@@ -1,5 +1,6 @@
 import { makeSpecimen,makeExperiment } from './genetics.js';
-import { drawCreature,drawPoster } from './world.js';
+import { drawCreature,drawPoster,drawScorePoster } from './world.js';
+import { readMatch } from './battle.js';
 const canvas=document.getElementById('cover'),c=canvas.getContext('2d');
 await document.fonts.ready;
 c.fillStyle='#eaf0f1';c.fillRect(0,0,1200,675);
@@ -18,3 +19,5 @@ document.getElementById('cover-download').addEventListener('click',()=>download(
 const sample=makeSpecimen('AmzTjh34230','lurker');
 document.getElementById('sample-download').addEventListener('click',()=>download(drawPoster(sample,null,null),'AMZ-物种证件.png'));
 document.getElementById('pair-download').addEventListener('click',()=>{const friend=makeSpecimen('今天也在潜水','chaos');download(drawPoster(sample,friend,makeExperiment(sample,friend)),'AMZ-双人实验-示例.png');});
+const proof=readMatch(location.search);
+if(proof){const button=document.createElement('button');button.textContent=`导出这局 ${proof.score} 分战绩`;button.addEventListener('click',()=>download(drawScorePoster(proof.specimen,{score:proof.score,seed:proof.seed,frames:proof.frames}),`AMZ-${proof.score}分战绩-修订.png`));document.querySelector('.press-actions').append(button);}
