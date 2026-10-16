@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>推友培养皿 · 你的网名，长成什么样？</title>
+  <meta name="theme-color" content="#eaf0f1">
+  <meta name="description" content="输入网名，养一只奇怪的互联网生物。把朋友也放进来，看看会不会一起发疯。AMZ 的社交小实验。">
+  <meta property="og:title" content="推友培养皿 · 把你的网名养成一种生物">
+  <meta property="og:description" content="你是潜水水母，还是抽象变形虫？把朋友也放进来，观察一下。">
+  <meta property="og:type" content="website"><meta property="og:image" content="https://yns34-hub.github.io/petri/cover.png"><meta property="og:url" content="https://yns34-hub.github.io/petri/">
+  <meta name="twitter:card" content="summary_large_image"><meta name="twitter:creator" content="@AmzTjh34230">
+  <link rel="canonical" href="https://yns34-hub.github.io/petri/"><link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css"><script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="./"><span class="brand-symbol" aria-hidden="true">◌</span><span>推友培养皿<small>A SMALL SOCIAL EXPERIMENT</small></span></a><nav><button class="quiet" id="about-open">实验说明</button><a class="creator" href="https://x.com/AmzTjh34230" target="_blank" rel="noopener noreferrer">AMZ 的小实验 ↗</a></nav></header>
+
+  <main class="lab">
+    <div class="scene-wrap"><canvas id="world" aria-label="会随指针游动的互联网生物培养皿" role="img"></canvas><div id="scene-error" hidden>当前浏览器没有开启画布。你仍然可以生成物种文字与分享链接。</div><div class="specimen-tag"><span class="tag-marker" aria-hidden="true"></span><span id="scene-code">AMZ / INTERNET ORGANISMS</span></div><div class="scene-guide"><span>戳一下它，或者投喂一点喜欢</span><div class="scene-controls"><button id="feed" aria-label="投喂生物">投喂 ♡</button><button id="pause" aria-label="暂停生物动画" aria-pressed="false">暂停 ⏸</button></div></div></div>
+
+    <section class="intro" aria-labelledby="headline"><p class="intro-kicker">你的互联网形状，有点奇怪。</p><h1 id="headline">把你的网名，<br>养成一种<span>生物。</span></h1><p class="intro-copy">有的只想潜水，有的一身反骨。<br>你呢，会长成什么样？</p>
+
+      <form id="specimen-form" novalidate><label for="name">先留下你的网名</label><div class="input-row"><span aria-hidden="true">@</span><input id="name" name="name" maxlength="48" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="网名或 X 用户名" value="AmzTjh34230" aria-describedby="name-error"><button class="grow-button" type="submit">养出来 ↗</button></div><p class="field-error" id="name-error" role="alert"></p><fieldset><legend>今天是哪一种状态？</legend><div class="mood-options"><label><input type="radio" name="mood" value="auto" checked><span>随便长长</span></label><label><input type="radio" name="mood" value="lurker"><span>默默潜水</span></label><label><input type="radio" name="mood" value="chaos"><span>有点抽象</span></label><label><input type="radio" name="mood" value="yapper"><span>忍不住说</span></label><label><input type="radio" name="mood" value="night"><span>半夜出没</span></label><label><input type="radio" name="mood" value="soft"><span>世界和平</span></label><label class="gallery-mood" hidden><input type="radio" name="mood" value="drift"><span>偶尔放电</span></label></div></fieldset></form>
+
+      <div class="social-teaser"><span aria-hidden="true">↳</span><p>再放进一位朋友，<br><b>观察你们会不会一起发疯。</b></p></div>
+    </section>
+
+    <section class="observation" id="observation" aria-label="当前物种报告"><div class="observation-top"><span id="report-label">正在观察 / @AmzTjh34230</span><span class="mono" id="report-code"></span></div><h2 id="species-title">一只奇怪的互联网生物</h2><p id="species-description">在培养皿里漂一会儿。</p><blockquote id="species-quote"></blockquote><div class="trait-line"><span id="trait-one"></span><span id="trait-two"></span><span id="trait-three"></span></div><div class="report-actions"><button class="dark-button" id="save-poster">保存物种证件 ↓</button><button class="quiet" id="copy-link">复制这只生物的链接 ↗</button></div><p class="status" id="status" role="status" aria-live="polite"></p></section>
+
+    <section class="friend-lab" aria-labelledby="friend-title"><div class="friend-heading"><p class="section-kicker">两个人，会不会长出一点新东西？</p><h2 id="friend-title">把朋友也放进来。</h2><p>同一个培养皿，观察一场小小的化学反应。</p></div><form id="friend-form" novalidate><label for="friend-name">朋友的网名</label><div class="input-row"><span aria-hidden="true">@</span><input id="friend-name" maxlength="48" autocomplete="off" spellcheck="false" placeholder="想和谁一起观察？" aria-describedby="friend-error"><button class="grow-button" type="submit">放进来 ↗</button></div><p class="field-error" id="friend-error" role="alert"></p><div class="friend-actions"><button id="remove-friend" class="quiet" type="button" hidden>先让我独处</button><a id="share-x" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer">把实验发到 X ↗</a></div></form></section>
+
+    <section class="collection" aria-labelledby="collection-title"><div class="collection-heading"><h2 id="collection-title">水里什么人都有。</h2><p>点一只，看看不同心情的形状。</p></div><div class="specimen-collection" id="collection"></div></section>
+  </main>
+
+  <footer><a href="https://x.com/AmzTjh34230" target="_blank" rel="noopener noreferrer">AMZ / @AmzTjh34230 ↗</a><p>按网名和心情长出来的虚构生物。纯属好玩，不读取账号。<br>每一只都在你的浏览器里长大。</p><span>Be water, my friend.</span></footer>
+
+  <dialog id="about-dialog"><button class="close quiet" id="about-close">关闭 ×</button><p class="section-kicker">来自 AMZ 的小实验</p><h2>互联网很大，<br>先长成自己的形状。</h2><p>输入网名，挑一个心情，就会生成一种有脾气的虚构生物。相同网名和心情，长出来的样子相同。</p><p>点一下它会躲，投喂后会靠过来。把朋友的网名放进来，就能观察两只生物的关系。</p><p>这里的物种与关系都是娱乐创作，不分析你的真实账号或人格。没有联网排行榜、真人匹配和公开留言。</p><p>分享链接只携带你填写的网名与心情，打开即复现。保存的图片可以自行上传到 X。</p></dialog>
+  <dialog id="poster-dialog"><button class="close quiet" id="poster-close">关闭 ×</button><h2>带走这份物种证据。</h2><p>图片已生成。手机上也可以长按保存。</p><img id="poster-image" alt="推友培养皿物种证件"><a id="poster-download" class="dark-button" download="AMZ-物种证件.png">下载图片 ↓</a></dialog>
+</body>
+</html>
