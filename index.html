@@ -2,39 +2,39 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>推友培养皿 · 你的网名，长成什么样？</title>
+  <title>推友斗菌场 · 20 秒，赢过我的残影</title>
   <meta name="theme-color" content="#eaf0f1">
-  <meta name="description" content="输入网名，养一只奇怪的互联网生物。把朋友也放进来，看看会不会一起发疯。AMZ 的社交小实验。">
-  <meta property="og:title" content="推友培养皿 · 把你的网名养成一种生物">
-  <meta property="og:description" content="你是潜水水母，还是抽象变形虫？把朋友也放进来，观察一下。">
+  <meta name="description" content="20 秒抢食竞技。吃蓝泡、躲红菌、冲刺连击。打完把真实操作残影发给朋友，来同一场地比分。AMZ 的推友斗菌场。">
+  <meta property="og:title" content="推友斗菌场 · 20 秒，赢过我的残影">
+  <meta property="og:description" content="抢蓝泡，躲红菌。打一局，把真实残影甩给朋友来追。">
   <meta property="og:type" content="website"><meta property="og:image" content="https://yns34-hub.github.io/petri/cover.png"><meta property="og:url" content="https://yns34-hub.github.io/petri/">
   <meta name="twitter:card" content="summary_large_image"><meta name="twitter:creator" content="@AmzTjh34230">
   <link rel="canonical" href="https://yns34-hub.github.io/petri/"><link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./style.css"><script type="module" src="./app.js"></script>
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="./"><span class="brand-symbol" aria-hidden="true">◌</span><span>推友培养皿<small>A SMALL SOCIAL EXPERIMENT</small></span></a><nav><button class="quiet" id="about-open">实验说明</button><a class="creator" href="https://x.com/AmzTjh34230" target="_blank" rel="noopener noreferrer">AMZ 的小实验 ↗</a></nav></header>
+  <header class="topbar"><a class="brand" href="./"><span class="brand-symbol" aria-hidden="true">◌</span><span>推友斗菌场<small>20 SECONDS. ONE PETRI DISH.</small></span></a><nav><button class="quiet" id="about-open">怎么玩</button><a class="creator" href="https://x.com/AmzTjh34230" target="_blank" rel="noopener noreferrer">AMZ 的小实验 ↗</a></nav></header>
 
   <main class="lab">
-    <div class="scene-wrap"><canvas id="world" aria-label="会随指针游动的互联网生物培养皿" role="img"></canvas><div id="scene-error" hidden>当前浏览器没有开启画布。你仍然可以生成物种文字与分享链接。</div><div class="specimen-tag"><span class="tag-marker" aria-hidden="true"></span><span id="scene-code">AMZ / INTERNET ORGANISMS</span></div><div class="scene-guide"><span>戳一下它，或者投喂一点喜欢</span><div class="scene-controls"><button id="feed" aria-label="投喂生物">投喂 ♡</button><button id="pause" aria-label="暂停生物动画" aria-pressed="false">暂停 ⏸</button></div></div></div>
+    <div class="scene-wrap"><canvas id="world" tabindex="0" aria-label="抢食竞技场，鼠标或手指移动，方向键也可控制，空格冲刺" role="img"></canvas><div id="scene-error" hidden>当前浏览器没有开启画布，请换一个浏览器再玩。</div><div class="specimen-tag"><span class="tag-marker" aria-hidden="true"></span><span id="scene-code">AMZ / PETRI ARENA</span></div><div class="battle-hud" id="battle-hud" hidden><div><span>剩余时间</span><strong id="battle-time">20.0</strong></div><div><span>你的分数</span><strong id="battle-score">0</strong></div><div id="ghost-score-wrap" hidden><span>对手残影</span><strong id="ghost-score">0</strong></div></div><div id="battle-countdown" class="battle-countdown" hidden>2</div><div class="scene-guide"><span id="scene-hint">先挑一个选手，然后进入培养皿抢食。</span><div class="scene-controls"><button id="feed" aria-label="投喂生物">投喂 ♡</button><button id="pause" aria-label="暂停生物动画" aria-pressed="false">暂停 ⏸</button><button id="dash" hidden>冲刺 · 空格 ↗</button></div></div></div>
 
-    <section class="intro" aria-labelledby="headline"><p class="intro-kicker">你的互联网形状，有点奇怪。</p><h1 id="headline">把你的网名，<br>养成一种<span>生物。</span></h1><p class="intro-copy">有的只想潜水，有的一身反骨。<br>你呢，会长成什么样？</p>
+    <section class="intro" aria-labelledby="headline"><p class="intro-kicker">朋友的残影，已经在水里等你。</p><h1 id="headline">你养的怪东西，<br>能<span>赢过推友</span>吗？</h1><p class="intro-copy">20 秒抢食。蓝泡加分，红菌扣分。<br>连吃越快，连击越狠。</p><p id="opponent-invite" class="opponent-invite" hidden></p>
 
       <form id="specimen-form" novalidate><label for="name">先留下你的网名</label><div class="input-row"><span aria-hidden="true">@</span><input id="name" name="name" maxlength="48" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="网名或 X 用户名" value="AmzTjh34230" aria-describedby="name-error"><button class="grow-button" type="submit">养出来 ↗</button></div><p class="field-error" id="name-error" role="alert"></p><fieldset><legend>今天是哪一种状态？</legend><div class="mood-options"><label><input type="radio" name="mood" value="auto" checked><span>随便长长</span></label><label><input type="radio" name="mood" value="lurker"><span>默默潜水</span></label><label><input type="radio" name="mood" value="chaos"><span>有点抽象</span></label><label><input type="radio" name="mood" value="yapper"><span>忍不住说</span></label><label><input type="radio" name="mood" value="night"><span>半夜出没</span></label><label><input type="radio" name="mood" value="soft"><span>世界和平</span></label><label class="gallery-mood" hidden><input type="radio" name="mood" value="drift"><span>偶尔放电</span></label></div></fieldset></form>
 
-      <div class="social-teaser"><span aria-hidden="true">↳</span><p>再放进一位朋友，<br><b>观察你们会不会一起发疯。</b></p></div>
+      <div class="battle-entry"><button id="start-battle" class="start-battle">20 秒，开战 ↗</button><p>鼠标跟随 / 手机拖动 / WASD 移动<br>空格或按钮冲刺。碰红菌扣 15 分。</p></div>
     </section>
 
     <section class="observation" id="observation" aria-label="当前物种报告"><div class="observation-top"><span id="report-label">正在观察 / @AmzTjh34230</span><span class="mono" id="report-code"></span></div><h2 id="species-title">一只奇怪的互联网生物</h2><p id="species-description">在培养皿里漂一会儿。</p><blockquote id="species-quote"></blockquote><div class="trait-line"><span id="trait-one"></span><span id="trait-two"></span><span id="trait-three"></span></div><div class="report-actions"><button class="dark-button" id="save-poster">保存物种证件 ↓</button><button class="quiet" id="copy-link">复制这只生物的链接 ↗</button></div><p class="status" id="status" role="status" aria-live="polite"></p></section>
 
-    <section class="friend-lab" aria-labelledby="friend-title"><div class="friend-heading"><p class="section-kicker">两个人，会不会长出一点新东西？</p><h2 id="friend-title">把朋友也放进来。</h2><p>同一个培养皿，观察一场小小的化学反应。</p></div><form id="friend-form" novalidate><label for="friend-name">朋友的网名</label><div class="input-row"><span aria-hidden="true">@</span><input id="friend-name" maxlength="48" autocomplete="off" spellcheck="false" placeholder="想和谁一起观察？" aria-describedby="friend-error"><button class="grow-button" type="submit">放进来 ↗</button></div><p class="field-error" id="friend-error" role="alert"></p><div class="friend-actions"><button id="remove-friend" class="quiet" type="button" hidden>先让我独处</button><a id="share-x" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer">把实验发到 X ↗</a></div></form></section>
+    <section class="friend-lab" aria-labelledby="friend-title" hidden><div class="friend-heading"><p class="section-kicker">两个人，会不会长出一点新东西？</p><h2 id="friend-title">把朋友也放进来。</h2><p>同一个培养皿，观察一场小小的化学反应。</p></div><form id="friend-form" novalidate><label for="friend-name">朋友的网名</label><div class="input-row"><span aria-hidden="true">@</span><input id="friend-name" maxlength="48" autocomplete="off" spellcheck="false" placeholder="想和谁一起观察？" aria-describedby="friend-error"><button class="grow-button" type="submit">放进来 ↗</button></div><p class="field-error" id="friend-error" role="alert"></p><div class="friend-actions"><button id="remove-friend" class="quiet" type="button" hidden>先让我独处</button><a id="share-x" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer">发战绩到 X ↗</a></div></form></section>
 
     <section class="collection" aria-labelledby="collection-title"><div class="collection-heading"><h2 id="collection-title">水里什么人都有。</h2><p>点一只，看看不同心情的形状。</p></div><div class="specimen-collection" id="collection"></div></section>
   </main>
 
-  <footer><a href="https://x.com/AmzTjh34230" target="_blank" rel="noopener noreferrer">AMZ / @AmzTjh34230 ↗</a><p>按网名和心情长出来的虚构生物。纯属好玩，不读取账号。<br>每一只都在你的浏览器里长大。</p><span>Be water, my friend.</span></footer>
+  <footer><a href="https://x.com/AmzTjh34230" target="_blank" rel="noopener noreferrer">AMZ / @AmzTjh34230 ↗</a><p>朋友不必同时在线，挑战链接会带上这一局的残影。<br>养一只怪东西，来水里碰个面。</p><span>Be water, my friend.</span></footer>
 
-  <dialog id="about-dialog"><button class="close quiet" id="about-close">关闭 ×</button><p class="section-kicker">来自 AMZ 的小实验</p><h2>互联网很大，<br>先长成自己的形状。</h2><p>输入网名，挑一个心情，就会生成一种有脾气的虚构生物。相同网名和心情，长出来的样子相同。</p><p>点一下它会躲，投喂后会靠过来。把朋友的网名放进来，就能观察两只生物的关系。</p><p>这里的物种与关系都是娱乐创作，不分析你的真实账号或人格。没有联网排行榜、真人匹配和公开留言。</p><p>分享链接只携带你填写的网名与心情，打开即复现。保存的图片可以自行上传到 X。</p></dialog>
-  <dialog id="poster-dialog"><button class="close quiet" id="poster-close">关闭 ×</button><h2>带走这份物种证据。</h2><p>图片已生成。手机上也可以长按保存。</p><img id="poster-image" alt="推友培养皿物种证件"><a id="poster-download" class="dark-button" download="AMZ-物种证件.png">下载图片 ↓</a></dialog>
+  <dialog id="about-dialog"><button class="close quiet" id="about-close">关闭 ×</button><p class="section-kicker">一局 20 秒，培养皿里见</p><h2>吃蓝泡，躲红菌。<br>把分数留给朋友追。</h2><p>鼠标移动或手机手指拖动，控制你的小生物吃蓝色营养泡泡。连续吃到，连击最高五倍；红菌撞一次扣 15 分并中断连击。</p><p>WASD / 方向键也能移动。空格或冲刺按钮会短暂加速，三秒恢复一次。</p><p>打完会生成挑战链接。朋友打开后，你的真实操作残影会出现在同一场地，比的是二十秒后的最终分数。双方不必同时在线。</p><p>这里是本地趣味竞技。分享轨迹和分数可被修改，不提供认证排名。生物外观按网名和心情生成，不分析真实账号。</p></dialog>
+  <dialog id="poster-dialog"><button class="close quiet" id="poster-close">关闭 ×</button><h2 id="poster-title">带着战绩，去下战书。</h2><p>图片已生成。手机上也可以长按保存。</p><img id="poster-image" alt="推友斗菌场战绩海报"><a id="poster-download" class="dark-button" download="AMZ-战绩海报.png">下载图片 ↓</a></dialog>
 </body>
 </html>

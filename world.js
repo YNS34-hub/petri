@@ -1,4 +1,5 @@
 import { random } from './genetics.js';
+import { ROUND_SECONDS, REPLAY_HZ, REPLAY_FRAMES, sampleReplay, scoreTitle } from './battle.js';
 
 const TAU = Math.PI * 2;
 const color = (h,s,l,a=1) => `hsla(${h},${s}%,${l}%,${a})`;
@@ -101,14 +102,16 @@ export function drawCreature(ctx,s,x,y,r,t=0,options={}) {
 export class PetriWorld {
   constructor(canvas){
     this.canvas=canvas;this.ctx=canvas.getContext('2d');if(!this.ctx)throw new Error('Canvas unavailable');
-    this.specimens=[];this.particles=[];this.pointer={x:-999,y:-999,active:false};this.food=[];this.ripples=[];
+    this.specimens=[];this.particles=[];this.pointer={x:-999,y:-999,active:false};this.food=[];this.ripples=[];this.game=null;this.keys=new Set();
     this.t=0;this.last=0;this.lastDraw=0;this.width=0;this.height=0;this.paused=matchMedia('(prefers-reduced-motion: reduce)').matches;this.frame=0;
     this.resizeObserver=new ResizeObserver(()=>this.resize());this.resizeObserver.observe(canvas);
     this.onPointerMove=e=>{const rect=canvas.getBoundingClientRect();this.pointer={x:e.clientX-rect.left,y:e.clientY-rect.top,active:true};if(this.paused)this.draw();};
     this.onPointerLeave=()=>{this.pointer.active=false;};
-    this.onPointerDown=e=>{this.onPointerMove(e);const {x,y}=this.pointer;this.ripples.push({x,y,age:0});this.specimens.forEach(p=>{const dx=p.x-x,dy=p.y-y,d=Math.hypot(dx,dy);if(d<this.radius*.8){p.vx+=dx/Math.max(d,1)*140;p.vy+=dy/Math.max(d,1)*100;}});if(this.paused)this.draw();};
+    this.onPointerDown=e=>{this.onPointerMove(e);if(this.game)return;const {x,y}=this.pointer;this.ripples.push({x,y,age:0});this.specimens.forEach(p=>{const dx=p.x-x,dy=p.y-y,d=Math.hypot(dx,dy);if(d<this.radius*.8){p.vx+=dx/Math.max(d,1)*140;p.vy+=dy/Math.max(d,1)*100;}});if(this.paused)this.draw();};
     canvas.addEventListener('pointermove',this.onPointerMove);canvas.addEventListener('pointerleave',this.onPointerLeave);canvas.addEventListener('pointerdown',this.onPointerDown);
-    this.onVisibility=()=>{this.last=0;};document.addEventListener('visibilitychange',this.onVisibility);
+    this.onVisibility=()=>{this.last=0;if(document.hidden&&this.game)this.cancelGame('离开页面，本局已取消。再开一局就能重新挑战。');};document.addEventListener('visibilitychange',this.onVisibility);
+    this.onKeyDown=e=>{if(!this.game||e.target.closest('input,textarea,select'))return;const key=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(key)){e.preventDefault();this.keys.add(key);if(key===' '&&!e.repeat)this.dash();}};
+    this.onKeyUp=e=>this.keys.delete(e.key.toLowerCase());document.addEventListener('keydown',this.onKeyDown);document.addEventListener('keyup',this.onKeyUp);
     this.resize();this.animate=this.animate.bind(this);this.frame=requestAnimationFrame(this.animate);
   }
   resize(){
@@ -126,11 +129,45 @@ export class PetriWorld {
     for(let i=0;i<8;i++){const angle=i/8*TAU;this.food.push({x:this.cx+Math.cos(angle)*this.radius*.5,y:this.cy+Math.sin(angle)*this.radius*.48,life:7+i*.3});}
     this.specimens.forEach(p=>p.fed=3);if(this.paused)this.draw();
   }
-  togglePause(){this.paused=!this.paused;this.last=0;this.draw();return this.paused;}
+  togglePause(){if(this.game){this.cancelGame('本局已结束，准备好可以重新开战。');return this.paused;}this.paused=!this.paused;this.last=0;this.draw();return this.paused;}
+  startGame({specimen,seed,opponent,onTick,onFinish,onCancel}){
+    const rng=random(seed),spawn=()=>{const a=rng()*TAU,d=Math.sqrt(rng())*.77;return{x:Math.cos(a)*d,y:Math.sin(a)*d};};
+    this.game={specimen,seed,opponent,onTick,onFinish,onCancel,rng,spawn,started:performance.now()+1800,elapsed:0,x:-.3,y:.3,score:0,combo:0,lastEat:-5,hits:0,collected:0,safeUntil:0,dashUntil:0,dashReady:0,frames:[],dots:Array.from({length:5},spawn),lastHud:-1};
+    this.keys.clear();this.paused=false;this.pointer.active=false;this.canvas.classList.add('is-playing');this.draw();
+  }
+  dash(){const g=this.game;if(g&&g.elapsed>=g.dashReady){g.dashUntil=g.elapsed+.3;g.dashReady=g.elapsed+3;}}
+  cancelGame(message){const g=this.game;if(!g)return;this.game=null;this.canvas.classList.remove('is-playing');this.keys.clear();g.onCancel?.(message);this.draw();}
+  updateGame(dt,now){
+    const g=this.game;if(!g)return;g.elapsed=Math.max(0,Math.min(ROUND_SECONDS,(now-g.started)/1000));
+    if(now<g.started){g.onTick?.({remaining:ROUND_SECONDS,score:0,combo:0,opponentScore:g.opponent?0:null,dashReady:true,countdown:Math.ceil((g.started-now)/1000)});return;}
+    let dx=(this.keys.has('arrowright')||this.keys.has('d')?1:0)-(this.keys.has('arrowleft')||this.keys.has('a')?1:0),dy=(this.keys.has('arrowdown')||this.keys.has('s')?1:0)-(this.keys.has('arrowup')||this.keys.has('w')?1:0);
+    const usingKeys=dx||dy;
+    if(!usingKeys&&this.pointer.active){dx=(this.pointer.x-this.cx)/this.radius-g.x;dy=(this.pointer.y-this.cy)/this.radius-g.y;}
+    const distance=Math.hypot(dx,dy),speed=g.elapsed<g.dashUntil?2.7:1.25;
+    if(distance>.002){const step=Math.min(distance,dt*speed);g.x+=dx/distance*step;g.y+=dy/distance*step;}
+    const edge=Math.hypot(g.x,g.y);if(edge>.82){g.x*=.82/edge;g.y*=.82/edge;}
+    g.dots.forEach(dot=>{if(Math.hypot(dot.x-g.x,dot.y-g.y)<.13){g.combo=g.elapsed-g.lastEat<1.65?Math.min(5,g.combo+1):1;g.score+=10*g.combo;g.collected++;g.lastEat=g.elapsed;let next=g.spawn();for(let i=0;i<12&&Math.hypot(next.x-g.x,next.y-g.y)<.3;i++)next=g.spawn();dot.x=next.x;dot.y=next.y;}});
+    const hazards=this.gameHazards(g.elapsed);
+    if(g.elapsed>g.safeUntil&&hazards.some(h=>Math.hypot(h.x-g.x,h.y-g.y)<.16)){g.score=Math.max(0,g.score-15);g.combo=0;g.hits++;g.safeUntil=g.elapsed+1.1;}
+    // 每二百毫秒记录位置和真实累计分数，朋友打开后看到的是这一局的残影。
+    while(g.frames.length<Math.min(REPLAY_FRAMES,Math.floor(g.elapsed*REPLAY_HZ)+1))g.frames.push([g.x,g.y,g.score]);
+    if(g.elapsed-g.lastHud>.07){g.lastHud=g.elapsed;g.onTick?.({remaining:Math.max(0,ROUND_SECONDS-g.elapsed),score:g.score,combo:g.combo,opponentScore:g.opponent?sampleReplay(g.opponent.frames,g.elapsed).score:null,dashReady:g.elapsed>=g.dashReady});}
+    if(g.elapsed>=ROUND_SECONDS){while(g.frames.length<REPLAY_FRAMES)g.frames.push([g.x,g.y,g.score]);const result={seed:g.seed,score:g.score,frames:g.frames,hits:g.hits,collected:g.collected,opponentScore:g.opponent?.score??null};this.game=null;this.canvas.classList.remove('is-playing');this.keys.clear();g.onFinish?.(result);}
+  }
+  gameHazards(t){return[0,1,2].map((i)=>{const angle=t*(i===1?-.42:.35)+i*TAU/3;return{x:Math.cos(angle)*(.3+i*.13),y:Math.sin(angle)*(.38+i*.1)};});}
+  drawGame(){
+    const c=this.ctx,g=this.game;if(!g)return;const r=this.radius,toPixel=p=>({x:this.cx+p.x*r,y:this.cy+p.y*r});
+    g.dots.forEach((d,i)=>{const p=toPixel(d);const glow=c.createRadialGradient(p.x-2,p.y-3,0,p.x,p.y,r*.06);glow.addColorStop(0,'#f6ffff');glow.addColorStop(.28,'#66d7e8');glow.addColorStop(.74,'#329eb4');glow.addColorStop(1,'#359daf22');c.beginPath();c.arc(p.x,p.y,r*.048+Math.sin(this.t*4+i)*r*.003,0,TAU);c.fillStyle=glow;c.fill();});
+    this.gameHazards(g.elapsed).forEach((h,i)=>{const p=toPixel(h),points=[];for(let k=0;k<22;k++){const a=k/22*TAU,d=r*(k%2?.073:.1);points.push([p.x+Math.cos(a)*d,p.y+Math.sin(a)*d]);}const path=smoothPath(points);const fill=c.createRadialGradient(p.x-r*.03,p.y-r*.04,0,p.x,p.y,r*.11);fill.addColorStop(0,'#ffd2ce');fill.addColorStop(.45,'#db777f');fill.addColorStop(1,'#9b4357');c.fillStyle=fill;c.fill(path);c.fillStyle='#712b45';c.beginPath();c.arc(p.x-r*.024,p.y-r*.01,r*.009,0,TAU);c.arc(p.x+r*.024,p.y-r*.01,r*.009,0,TAU);c.fill();});
+    if(g.opponent){const ghost=sampleReplay(g.opponent.frames,g.elapsed),p=toPixel(ghost);c.save();c.globalAlpha=.45;drawCreature(c,g.opponent.specimen,p.x,p.y,r*.075,this.t,{blink:1});c.restore();c.beginPath();c.arc(p.x,p.y,r*.115,0,TAU);c.strokeStyle='#9d8ab47a';c.lineWidth=1;c.stroke();c.fillStyle='#725d98';c.font='10px Arial';c.textAlign='center';c.fillText(`@${g.opponent.specimen.name} 的残影`,p.x,p.y-r*.16,r*.9);}
+    const me=toPixel(g);c.save();if(g.elapsed<g.safeUntil)c.globalAlpha=.5+Math.sin(g.elapsed*25)*.3;drawCreature(c,g.specimen,me.x,me.y,r*.087,this.t,{blink:1});c.restore();
+    c.beginPath();c.arc(me.x,me.y,r*.12,0,TAU);c.strokeStyle='#176f8180';c.lineWidth=1.2;c.stroke();c.fillStyle='#183a46';c.font='10px "Microsoft YaHei",sans-serif';c.textAlign='center';c.fillText('你',me.x,me.y+r*.19);
+    if(g.elapsed<g.dashUntil){c.beginPath();c.arc(me.x,me.y,r*.12,0,TAU);c.strokeStyle='#fff';c.lineWidth=2;c.stroke();}
+  }
   animate(now){
     const dt=this.last?Math.min((now-this.last)/1000,.035):0;this.last=now;
     // 物理保持按真实时间更新，画面限于每秒约三十帧，避免手机反复计算玻璃阴影。
-    if(!this.paused&&!document.hidden){this.t+=dt;this.update(dt);if(now-this.lastDraw>=32){this.draw();this.lastDraw=now;}}
+    if(!this.paused&&!document.hidden){this.t+=dt;if(this.game)this.updateGame(dt,now);else this.update(dt);if(now-this.lastDraw>=32){this.draw();this.lastDraw=now;}}
     this.frame=requestAnimationFrame(this.animate);
   }
   update(dt){
@@ -168,6 +205,7 @@ export class PetriWorld {
   draw(){
     if(!this.ctx||!this.width)return;
     const c=this.ctx;c.clearRect(0,0,this.width,this.height);this.drawDish();
+    if(this.game){this.drawGame();return;}
     const two=this.specimens.length===2,r=this.radius*(two?.29:.43);
     this.ripples.forEach(w=>{c.beginPath();c.arc(w.x,w.y,w.age*this.radius*.48+8,0,TAU);c.lineWidth=1;c.strokeStyle=`rgba(255,255,255,${Math.max(0,.45-w.age*.2)})`;c.stroke();});
     for(const p of this.specimens){
@@ -177,18 +215,30 @@ export class PetriWorld {
     }
     this.food.forEach((f,i)=>{c.save();c.translate(f.x,f.y+Math.sin(this.t+i)*3);c.fillStyle='#c279957d';c.font='16px Arial';c.textAlign='center';c.fillText('♡',0,0);c.restore();});
   }
-  destroy(){cancelAnimationFrame(this.frame);this.resizeObserver.disconnect();this.canvas.removeEventListener('pointermove',this.onPointerMove);this.canvas.removeEventListener('pointerleave',this.onPointerLeave);this.canvas.removeEventListener('pointerdown',this.onPointerDown);document.removeEventListener('visibilitychange',this.onVisibility);}
+  destroy(){cancelAnimationFrame(this.frame);this.resizeObserver.disconnect();this.canvas.removeEventListener('pointermove',this.onPointerMove);this.canvas.removeEventListener('pointerleave',this.onPointerLeave);this.canvas.removeEventListener('pointerdown',this.onPointerDown);document.removeEventListener('visibilitychange',this.onVisibility);document.removeEventListener('keydown',this.onKeyDown);document.removeEventListener('keyup',this.onKeyUp);}
 }
 
 export function drawPoster(a,b,experiment){
   const canvas=document.createElement('canvas');canvas.width=1400;canvas.height=1700;const c=canvas.getContext('2d');if(!c)throw new Error('当前浏览器无法导出图片');
   c.fillStyle='#eaf0f1';c.fillRect(0,0,1400,1700);
   const grad=c.createRadialGradient(700,720,0,700,720,710);grad.addColorStop(0,'#fbffff');grad.addColorStop(.65,'#d3e9eb');grad.addColorStop(1,'#eaf0f1');c.fillStyle=grad;c.fillRect(0,0,1400,1700);
-  c.fillStyle='#183a46';c.font='bold 30px "Microsoft YaHei",sans-serif';c.fillText('推友培养皿',75,104);c.font='17px Arial';c.fillText('AMZ / INTERNET ORGANISMS',75,145);c.textAlign='right';c.font='23px Arial';c.fillText('@AmzTjh34230',1325,112);c.textAlign='left';
+  c.fillStyle='#183a46';c.font='bold 30px "Microsoft YaHei",sans-serif';c.fillText('推友斗菌场',75,104);c.font='17px Arial';c.fillText('AMZ / 20 SECONDS. ONE PETRI DISH.',75,145);c.textAlign='right';c.font='23px Arial';c.fillText('@AmzTjh34230',1325,112);c.textAlign='left';
   c.fillStyle='#526f7b';c.font='23px "Microsoft YaHei",sans-serif';c.fillText(b?'双人观察报告':'互联网物种证件',75,239);
   const specs=b?[a,b]:[a];specs.forEach((s,i)=>{const x=b?(i?985:415):700,y=690,r=b?200:290;drawCreature(c,s,x,y,r,1.8,{blink:1,gaze:{x:b?(i?-.7:.7):.1,y:0}});c.textAlign='center';c.fillStyle='#42636c';c.font='24px "Microsoft YaHei",sans-serif';c.fillText(`@${s.name}`,x,b?1090:1180,b?520:1200);});
   c.textAlign='left';c.fillStyle='#183a46';c.font=`bold ${b?64:63}px "Microsoft YaHei",sans-serif`;const title=b?experiment.title:a.title;c.fillText(title,75,1310);
   c.fillStyle='#506c77';c.font='29px "Microsoft YaHei",sans-serif';c.fillText(b?experiment.line:a.description,75,1382);c.font='27px "Microsoft YaHei",sans-serif';c.fillText(b?'把你们放在一起，会发生什么？':`「${a.quote}」`,75,1444);
   c.strokeStyle='#bed0d5';c.lineWidth=1;c.beginPath();c.moveTo(75,1510);c.lineTo(1325,1510);c.stroke();c.fillStyle='#2e5866';c.font='24px "Microsoft YaHei",sans-serif';c.fillText('你的网名，会长成什么样？',75,1574);c.font='22px Arial';c.textAlign='right';c.fillText('yns34-hub.github.io/petri',1325,1574);c.textAlign='left';c.fillStyle='#526e78';c.font='17px "Microsoft YaHei",sans-serif';c.fillText('由网名与心情生成 · 虚构物种，纯属好玩',75,1635);c.font='16px Arial';c.textAlign='right';c.fillText(a.code,1325,1635);
+  return canvas;
+}
+
+export function drawScorePoster(specimen,result){
+  const canvas=drawPoster(specimen,null,null),c=canvas.getContext('2d');
+  c.fillStyle='#eaf0f1';c.fillRect(0,190,1400,110);c.fillRect(0,1150,1400,360);
+  c.fillStyle='#506c77';c.font='25px "Microsoft YaHei",sans-serif';c.fillText(`推友斗菌场 / 20 秒真实战绩 / @${specimen.name}`,75,249,1250);
+  c.fillStyle='#183a46';c.font='bold 140px Arial';c.fillText(`${result.score}`,75,1305);c.font='32px "Microsoft YaHei",sans-serif';c.fillText('分',520,1300);
+  c.font='bold 51px "Microsoft YaHei",sans-serif';c.fillText(scoreTitle(result.score),75,1390);
+  c.fillStyle='#506c77';c.font='29px "Microsoft YaHei",sans-serif';c.fillText(`抢到 ${result.collected} 颗营养泡泡，碰撞 ${result.hits} 次。`,75,1450);
+  c.fillStyle='#183a46';c.font='26px "Microsoft YaHei",sans-serif';c.fillText('你能赢过我的残影吗？',780,1360);
+  c.fillStyle='#506c77';c.font='21px "Microsoft YaHei",sans-serif';c.fillText('打开挑战链接，同一场地见。',780,1410);
   return canvas;
 }
